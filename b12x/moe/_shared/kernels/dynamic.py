@@ -1783,16 +1783,24 @@ class MoEDynamicKernelBackend:
 
     @cute.jit
     def _sync_input_warp_pair(self, pair_idx: Int32):
-        if pair_idx == Int32(0):
-            self.input_pair_barrier_0.arrive_and_wait()
-        elif pair_idx == Int32(1):
-            self.input_pair_barrier_1.arrive_and_wait()
-        elif pair_idx == Int32(2):
-            self.input_pair_barrier_2.arrive_and_wait()
-        elif pair_idx == Int32(3):
-            self.input_pair_barrier_3.arrive_and_wait()
+        if cutlass.const_expr(self.num_route_warps <= 6):
+            if pair_idx == Int32(0):
+                self.input_pair_barrier_0.arrive_and_wait()
+            elif pair_idx == Int32(1):
+                self.input_pair_barrier_1.arrive_and_wait()
+            else:
+                self.input_pair_barrier_2.arrive_and_wait()
         else:
-            self.input_pair_barrier_4.arrive_and_wait()
+            if pair_idx == Int32(0):
+                self.input_pair_barrier_0.arrive_and_wait()
+            elif pair_idx == Int32(1):
+                self.input_pair_barrier_1.arrive_and_wait()
+            elif pair_idx == Int32(2):
+                self.input_pair_barrier_2.arrive_and_wait()
+            elif pair_idx == Int32(3):
+                self.input_pair_barrier_3.arrive_and_wait()
+            else:
+                self.input_pair_barrier_4.arrive_and_wait()
 
     @cute.jit
     def _sync_w4a8_stage_ready(self, stage: Int32):
